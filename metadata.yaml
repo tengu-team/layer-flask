@@ -1,0 +1,10 @@
+name: flask
+summary: This charm sets up a flask environment
+maintainer: Sander Borny <sander.borny@intec.ugent.be>
+description: |
+  This charm sets up a flask environment
+tags:
+  - flask
+provides:
+  website:
+    interface: http

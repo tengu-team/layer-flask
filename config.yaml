@@ -1,0 +1,5 @@
+options:
+  nginx:
+    default: True
+    type: boolean
+    description: Configures nginx and gunicron for the flask application. Changing this option to false after deployment has no effect.
