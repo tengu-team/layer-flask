@@ -1,5 +1,6 @@
 import os
 import requests
+import toml
 
 from charmhelpers.core import hookenv
 from charmhelpers.core.hookenv import (
@@ -17,18 +18,12 @@ from subprocess import call
 
 config = hookenv.config()
 
-@hook('install')
+@when_not('flask.installed')
 def install():
 	saveWdir = os.getcwd()
 	os.chdir('/home/ubuntu')
-	url = "https://bootstrap.pypa.io/get-pip.py"
-	filename = url.split("/")[-1]
-	with open(filename, "wb") as f:
-		r = requests.get(url)
-		f.write(r.content)
-	call(['python', 'get-pip.py'])
 	for pkg in ['Flask', 'gunicorn', 'nginx']:
-		call(["pip", "install", pkg])
+		pip_install(pkg)
 	os.chdir(saveWdir)
 	set_state('flask.installed')
 	if config["nginx"]:
@@ -43,12 +38,16 @@ def configure_website(website):
 @when_not('flask.nginx.installed')
 def start_nginx():
 	hookenv.log("Configuring site for nginx")
-	configure_site('default', 'gunicornhost.conf')
+	configure_site('default', 'gunicornhost.conf', flask_port=config['flask-port'])
 	set_state('flask.nginx.installed')
 	status_set('active', 'Ready')
 
-@hook('config-changed')
-def config_changed():
-	if config.changed("nginx"):
-		if config["nginx"]:
-			set_state('nginx.install')
+@when('config.changed.nginx')
+def config_changed_nginx():
+	if config["nginx"]:
+		set_state('nginx.install')
+
+@when('config.changed.flask-port', 'flask.installed')
+def config_changed_flask_port():
+	if config.changed('flask-port'):
+		remove_state('flask.nginx.installed')

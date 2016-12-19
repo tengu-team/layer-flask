@@ -19,7 +19,7 @@ def start_api(path, app, port):
 	else:		
 		path = path.rstrip('/')
 		info = path.rsplit('/', 1)
-		Popen(["python", info[1]])
+		Popen(["python", info[1]])	
 		set_state('flask.running')
 
 def start_api_gunicorn(path, app, port):

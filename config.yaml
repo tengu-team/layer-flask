@@ -3,3 +3,7 @@ options:
     default: True
     type: boolean
     description: Configures nginx and gunicron for the flask application. Changing this option to false after deployment has no effect.
+  flask-port:
+    default: 8000
+    type: int
+    description: Flask listening port
