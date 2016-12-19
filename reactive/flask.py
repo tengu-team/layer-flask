@@ -1,6 +1,5 @@
 import os
 import requests
-import toml
 
 from charmhelpers.core import hookenv
 from charmhelpers.core.hookenv import (
