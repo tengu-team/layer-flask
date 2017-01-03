@@ -1,15 +1,16 @@
 
 # layer-flask
-This layer allows configuration for flask applications, with or without gunicorn and nginx deployment.
+This layer allows configuration for Flask applications, with or without gunicorn and nginx deployment.
 
 # Usage
 
 Include this layer in your`layer.yaml`
 
-The flask allows you to install dependencies for the flask application via wheelhouse.
 ```
 layer:flask
 ```
+The Flask layer allows you to install dependencies for the Flask application via wheelhouse.
+
 Example:
 
 ```python
@@ -21,15 +22,17 @@ def install():
     set_state('app.installed')
 ```
 
-The flask layer will set `flask.installed` state when installed and can be used as an indicator to start the Flask application. The `start_api()` function is used to tell the flask layer to launch the application. it takes three arguments:
+The flask layer will set the `flask.installed` state when installed and can be used as an indicator to start the Flask application. The `start_api()` function is used to tell the flask layer to launch the application. it takes three arguments:
 `start_api(PATH_TO_PROJECT_MAIN_FILE, APP_OBJECT_NAME, FLASK_PORT)`. The `APP_OBJECT_NAME` is nothing more than the name you gave your app object in your application `app = Flask(__name__)`.
 
 Example:
 
 ```python
 @when('flask.installed')
+@when_not('app.running')
 def start_app():
    start_api(project_path + "/server.py", "app", config["flask-port"])
+   set_state('app.running')
 ```
 
 

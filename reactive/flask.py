@@ -19,11 +19,8 @@ config = hookenv.config()
 
 @when_not('flask.installed')
 def install():
-	saveWdir = os.getcwd()
-	os.chdir('/home/ubuntu')
 	for pkg in ['Flask', 'gunicorn', 'nginx']:
 		pip_install(pkg)
-	os.chdir(saveWdir)
 	set_state('flask.installed')
 	if config["nginx"]:
 		set_state('nginx.install')
