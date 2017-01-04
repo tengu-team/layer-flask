@@ -12,6 +12,7 @@ from charmhelpers.contrib.python.packages import pip_install, pip_install_requir
 from charms.reactive import hook, when, when_not, set_state, remove_state
 
 from charms.layer.nginx import configure_site
+from charms.layer.flaskhelpers import restart_api
 
 from subprocess import call
 
@@ -19,11 +20,20 @@ config = hookenv.config()
 
 @when_not('flask.installed')
 def install():
+	if not os.path.exists("/home/ubuntu/flask-config"):
+		touch('/home/ubuntu/flask-config')
 	for pkg in ['Flask', 'gunicorn', 'nginx']:
 		pip_install(pkg)
 	set_state('flask.installed')
 	if config["nginx"]:
 		set_state('nginx.install')
+	else:
+		set_state('nginx.stop')
+
+@when('nginx.stop', 'nginx.available')
+def stop_nginx():
+	call(['service', 'nginx', 'stop'])
+	remove_state('nginx.stop')
 
 @when('website.available')
 def configure_website(website):
@@ -45,5 +55,17 @@ def config_changed_nginx():
 
 @when('config.changed.flask-port', 'flask.installed')
 def config_changed_flask_port():
-	if config.changed('flask-port'):
+	if config.changed('flask-port') and config["nginx"]:
+		hookenv.log("Port change detected")
+		hookenv.log("Restarting API")
 		remove_state('flask.nginx.installed')
+		#remove old port connections
+		call(["fuser", "-k", str(config.previous('flask-port')) + "/tcp"])
+		#remove new port connections
+		call(["fuser", "-k", str(config['flask-port']) + "/tcp"])
+		#start api again
+		restart_api(config['flask-port'])
+
+def touch(path):
+    with open(path, 'a'):
+        os.utime(path, None)

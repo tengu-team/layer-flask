@@ -14,13 +14,30 @@ def install_dependencies(pathWheelhouse, pathRequirements):
 	call(["pip", "install", "--no-index", "--find-links=" + pathWheelhouse, "-r", pathRequirements])
 
 def start_api(path, app, port):
+	if os.path.exists("/home/ubuntu/flask-config"):
+		file = open("/home/ubuntu/flask-config", "w")
+		file.write(path + " " + app)
+		file.close()
+		start(path, app, port)
+
+def restart_api(port):
+	if os.path.exists("/home/ubuntu/flask-config"):
+		file = open("/home/ubuntu/flask-config", "r")
+		line = file.readline()
+		if line != "":
+			path, app = line.split()
+			start(path, app, port)
+
+def start(path, app, port):
 	if config["nginx"]:
 		start_api_gunicorn(path, app, port)
 	else:		
 		path = path.rstrip('/')
-		info = path.rsplit('/', 1)
-		Popen(["python3", info[1]])	
+		#info = path.rsplit('/', 1)
+		#Popen(["python3", info[1]])
+		Popen(["pyhon3", path])	
 		set_state('flask.running')
+
 
 def start_api_gunicorn(path, app, port):
 	saveWdir = os.getcwd()
