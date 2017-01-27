@@ -37,17 +37,17 @@ def start_app():
 
 
 ## Run Flask from app.run()
-This mode is intended for development purposes. To run in this mode make sure to deploy your charm with configuration option `nginx: False`.
+This mode is intended for development purposes. To run in this mode, deploy your charm with configuration option `nginx: False`. The API will be running on port 5000.
 
 ## Run Flask with Gunicorn and NGINX
-To run in this mode, make sure to deploy your charm with configuration option `nginx: True`.
+To run in this mode, deploy your charm with configuration option `nginx: True`.
 The Flask layer utilizes `layer:nginx` [Repo](https://github.com/battlemidget/juju-layer-nginx) and therefor requires a `site.toml` file for additional configuration. 
 
 The `site.toml` needs at least one configuration parameter:
 ```
 "server_name" = "_"
 ```
-
+The API will be running on the port specified on 
 
 
 ## Authors

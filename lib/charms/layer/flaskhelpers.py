@@ -13,6 +13,7 @@ config = hookenv.config()
 def install_dependencies(pathWheelhouse, pathRequirements):
 	call(["pip", "install", "--no-index", "--find-links=" + pathWheelhouse, "-r", pathRequirements])
 
+# Should be used by the layer including the flask layer
 def start_api(path, app, port):
 	if os.path.exists("/home/ubuntu/flask-config"):
 		file = open("/home/ubuntu/flask-config", "w")
@@ -20,6 +21,7 @@ def start_api(path, app, port):
 		file.close()
 		start(path, app, port)
 
+# Used by the flask layer to restart when flask-port changes
 def restart_api(port):
 	if os.path.exists("/home/ubuntu/flask-config"):
 		file = open("/home/ubuntu/flask-config", "r")
@@ -33,11 +35,8 @@ def start(path, app, port):
 		start_api_gunicorn(path, app, port)
 	else:		
 		path = path.rstrip('/')
-		#info = path.rsplit('/', 1)
-		#Popen(["python3", info[1]])
-		Popen(["pyhon3", path])	
+		Popen(["python3", path])	
 		set_state('flask.running')
-
 
 def start_api_gunicorn(path, app, port):
 	saveWdir = os.getcwd()
