@@ -4,8 +4,8 @@ from charms.reactive import (
     set_state,
 )
 
-from charmhelpers.core import hookenv
-from charmhelpers.core import host
+from charmhelpers.core import hookenv, host
+from charmhelpers.core.templating import render
 from subprocess import call, Popen
 
 config = hookenv.config()
@@ -47,13 +47,20 @@ def start_api_gunicorn(path, app, port):
 	#remove .py from main
 	main = info[1].split('.', 1)[0] 
 
-	file = open(info[0] + "/wsgi.py", "w")
-	file.write("from " + main + " import " + app + "\n")
-	file.write('if __name__ == "__main__":' + "\n")
-	file.write('    ' + app + '.run()')
-	file.close()
+	render(source='gunicorn.wsgi',
+		   target=info[0] + "/wsgi.py",
+		   context={
+		   		'app': app,
+		   		'main': main,
+		   })
 
 	os.chdir(info[0])
 	Popen(["gunicorn", "--bind", "0.0.0.0:" + str(port), "wsgi:" + app])
 	os.chdir(saveWdir)
 	set_state('flask.running')
+
+def stop_port_app(port):
+	call(["fuser", "-k", str(port) + "/tcp"])
+
+def stop_app():
+	call(["fuser", "-k", str(config['flask-port']) + "/tcp"])

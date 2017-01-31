@@ -12,7 +12,7 @@ from charmhelpers.contrib.python.packages import pip_install
 from charms.reactive import when, when_not, set_state, remove_state
 
 from charms.layer.nginx import configure_site
-from charms.layer.flaskhelpers import restart_api
+from charms.layer.flaskhelpers import restart_api, stop_port_app
 
 from subprocess import call
 
@@ -82,6 +82,3 @@ def config_changed_flask_port():
 def touch(path):
     with open(path, 'a'):
         os.utime(path, None)
-
-def stop_port_app(port):
-	call(["fuser", "-k", str(port) + "/tcp"])
