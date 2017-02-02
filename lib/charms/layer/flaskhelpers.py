@@ -11,7 +11,12 @@ from subprocess import call, Popen
 config = hookenv.config()
 
 def install_dependencies(pathWheelhouse, pathRequirements):
+	hookenv.log('Installing dependencies')
 	call(["pip", "install", "--no-index", "--find-links=" + pathWheelhouse, "-r", pathRequirements])
+
+def install_requirements(pathRequirements):
+	hookenv.log('Installing dependencies')
+	call(["pip", "install", "--upgrade", "-r", pathRequirements])
 
 # Should be used by the layer including the flask layer
 def start_api(path, app, port):
@@ -32,13 +37,13 @@ def restart_api(port):
 
 def start(path, app, port):
 	if config["nginx"]:
-		start_api_gunicorn(path, app, port)
+		start_api_gunicorn(path, app, port, config['workers'])
 	else:		
 		path = path.rstrip('/')
-		Popen(["python3", path])	
+		Popen(["python3", path])
 		set_state('flask.running')
 
-def start_api_gunicorn(path, app, port):
+def start_api_gunicorn(path, app, port, workers):
 	saveWdir = os.getcwd()
 	path = path.rstrip('/')
 	#info[0] = path to project
@@ -55,7 +60,7 @@ def start_api_gunicorn(path, app, port):
 		   })
 
 	os.chdir(info[0])
-	Popen(["gunicorn", "--bind", "0.0.0.0:" + str(port), "wsgi:" + app])
+	Popen(["gunicorn", "--bind", "0.0.0.0:" + str(port), "wsgi:" + app, "-w", str(workers)])
 	os.chdir(saveWdir)
 	set_state('flask.running')
 

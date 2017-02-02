@@ -79,6 +79,14 @@ def config_changed_flask_port():
 		#start api again
 		restart_api(config['flask-port'])
 
+@when('config.changed.workers', 'flask.installed')
+def config_changed_workers():
+	if config.changed('workers') and config["nginx"]:
+		hookenv.log('Workers change detected')
+		hookenv.log("Restarting API")
+		stop_port_app(config['flask-port'])
+		restart_api(config['flask-port'])
+
 def touch(path):
     with open(path, 'a'):
         os.utime(path, None)
