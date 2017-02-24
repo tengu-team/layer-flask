@@ -9,26 +9,29 @@ Include this layer in your`layer.yaml`
 ```
 layer:flask
 ```
-The Flask layer allows you to install dependencies for the Flask application via wheelhouse.
+The Flask layer allows you to install dependencies for the Flask application via wheelhouse or via a requirements.txt file.
 
 Example:
 
 ```python
-from charms.layer.flaskhelpers import install_dependencies
+from charms.layer.flaskhelpers import install_dependencies, install_requirements
 
 @when_not(app.installed)
 def install():
+	#Install dependencies via wheelhouse
     install_dependencies(project_path + "/wheelhouse", project_path + "/requirements.txt")
+    #Download dependencies via requirements.txt
+    install_requirements(project_path + "/requirements.txt")
     set_state('app.installed')
 ```
 
-The flask layer will set the `flask.installed` state when installed and can be used as an indicator to start the Flask application. The `start_api()` function is used to tell the flask layer to launch the application. it takes three arguments:
+The flask layer will set the `flask.installed` state when installed and can be used as an indicator to start the Flask application. The state `flask.nginx.installed` is set once flask and nginx are installed. The `start_api()` function is used to tell the flask layer to launch the application. it takes three arguments:
 `start_api(PATH_TO_PROJECT_MAIN_FILE, APP_OBJECT_NAME, FLASK_PORT)`. The `APP_OBJECT_NAME` is nothing more than the name you gave your app object in your application `app = Flask(__name__)`.
 
 Example:
 
 ```python
-@when('flask.installed')
+@when('flask.nginx.installed')
 @when_not('app.running')
 def start_app():
    start_api(project_path + "/server.py", "app", config["flask-port"])

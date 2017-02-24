@@ -1,0 +1,12 @@
+[Unit]
+Description=Flask API service
+After=nginx.service
+
+[Service]
+Type=idle
+User=ubuntu
+Group=ubuntu
+ExecStart=/usr/local/bin/gunicorn --bind 0.0.0.0:{{port}} --pythonpath {{pythonpath}} wsgi:{{app}} -w {{workers}} -p /home/ubuntu/flask/master.pid
+
+[Install]
+WantedBy=multi-user.target
