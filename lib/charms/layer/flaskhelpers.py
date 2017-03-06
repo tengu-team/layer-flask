@@ -1,4 +1,6 @@
 import os
+import json
+import toml
 from charms.reactive import (
     set_state,
 )
@@ -17,28 +19,28 @@ def install_requirements(pathRequirements):
     call(["pip", "install", "--upgrade", "-r", pathRequirements])
 
 # Should be used by the layer including the flask layer
-def start_api(path, app, port):    
+def start_api(path, app, port, template='unitfile'):
     if os.path.exists("/home/ubuntu/flask/flask-config"):
         file = open("/home/ubuntu/flask/flask-config", "w")
-        file.write(path + " " + app)
-        file.close()        
-        start(path, app, port)
+        file.write(path + " " + app + " " + template)
+        file.close()
+        start(path, app, port, template)
 
 # Used by the flask layer to restart when flask-port changes occur
-def restart_api(port):    
-    path, app = get_app_info()
-    if path != "" and app != "":
-        start(path, app, port)
+def restart_api(port):
+    path, app, template = get_app_info()
+    if path != "" and app != "" and template != "":
+        start(path, app, port, template)
 
-def start(path, app, port):
+def start(path, app, port, template):
     if config["nginx"]:
-        start_api_gunicorn(path, app, port, config['workers'])
+        start_api_gunicorn(path, app, port, config['workers'], template)
     else:
         path = path.rstrip('/')
         Popen(["python3", path])
         set_state('flask.running')
 
-def start_api_gunicorn(path, app, port, workers):
+def start_api_gunicorn(path, app, port, workers, template):
     stop_api()
     path = path.rstrip('/')
     #info[0] = path to project
@@ -54,15 +56,14 @@ def start_api_gunicorn(path, app, port, workers):
                 'app': app,
                 'main': main,
            })
-    
-    render(source='unitfile',
+    unitfile_context = load_unitfile()
+    unitfile_context['port'] = str(port)
+    unitfile_context['pythonpath'] = info[0]
+    unitfile_context['app'] = app 
+    unitfile_context['workers'] = str(workers) 
+    render(source=template,
            target='/etc/systemd/system/flask.service',
-           context={
-                'port': str(port),
-                'pythonpath': info[0],
-                'app': app,
-                'workers': str(workers)
-           })
+           context=unitfile_context)
 
     call(['systemctl', 'enable', 'flask'])
     host.service_start('flask')
@@ -88,28 +89,30 @@ def set_workers():
         file.close()
         if is_flask_running():
             if n_workers > previous_workers:
-            	while previous_workers < n_workers:
-                	call(["kill", "-TTIN", pid])
-                	previous_workers += 1
+                while previous_workers < n_workers:
+                    call(["kill", "-TTIN", pid])
+                    previous_workers += 1
             elif n_workers < previous_workers:
-            	while previous_workers > n_workers:
-                	call(["kill", "-TTOU", pid])
-                	previous_workers -= 1
+                while previous_workers > n_workers:
+                    call(["kill", "-TTOU", pid])
+                    previous_workers -= 1
         rewrite_unitfile()
 
 def rewrite_unitfile():
     if os.path.exists('/etc/systemd/system/flask.service'):
-        path, app = get_app_info()
+        path, app, template = get_app_info()
         path = path.rstrip('/')
         pp = path.rsplit('/', 1)[0]
-        render(source='unitfile',
+
+        unitfile_context = load_unitfile()
+        unitfile_context['port'] = onfig['flask-port']
+        unitfile_context['pythonpath'] = pp
+        unitfile_context['app'] = app 
+        unitfile_context['workers'] = config['workers']
+
+        render(source=template,
            target='/etc/systemd/system/flask.service',
-           context={
-                'port': config['flask-port'],
-                'pythonpath': pp,
-                'app': app,
-                'workers': config['workers']
-           })
+           context=unitfile_context)
         call(['systemctl', "daemon-reload"])
 
 def get_app_info():
@@ -117,6 +120,15 @@ def get_app_info():
         file = open("/home/ubuntu/flask/flask-config", "r")
         line = file.readline()
         if line != "":
-            path, app = line.split()
-            return path, app
-    return "", ""            
+            path, app, template = line.split()
+            return path, app, template
+    return "", "", ""   
+
+def load_unitfile():
+    if not os.path.isfile('unitfile.toml'):
+        return {}
+
+    with open('unitfile.toml') as fp:
+        conf = toml.loads(fp.read())
+
+    return conf   
