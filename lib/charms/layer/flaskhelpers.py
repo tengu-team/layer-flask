@@ -132,3 +132,9 @@ def load_unitfile():
         conf = toml.loads(fp.read())
 
     return conf   
+
+def gracefull_reload():
+    if os.path.exists('/home/ubuntu/flask/master.pid'):
+        with open('/home/ubuntu/flask/master.pid', 'r') as f:
+            pid = f.readline().strip()
+            call(['kill', '-HUP', pid])
