@@ -50,7 +50,16 @@ The `site.toml` needs at least one configuration parameter:
 ```
 "server_name" = "_"
 ```
-The API will be running on the port specified on 
+The API will be running on the port specified by the config `port`.
+
+The Flask api is run via systemd. To customize the generated unitfile, create a seperate unitfile template and a `unitfile.toml` and with additional configurations. For example, adding environment variables:
+```
+'env1' = 'Environment="VAR=example"'
+```
+Then call the start_api with the customized untifile template:
+```
+start_api(project_path + "/server.py", "app", config["flask-port"], 'my.unitfile')
+```
 
 
 ## Authors
