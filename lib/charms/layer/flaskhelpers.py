@@ -105,7 +105,7 @@ def rewrite_unitfile():
         pp = path.rsplit('/', 1)[0]
 
         unitfile_context = load_unitfile()
-        unitfile_context['port'] = onfig['flask-port']
+        unitfile_context['port'] = config['flask-port']
         unitfile_context['pythonpath'] = pp
         unitfile_context['app'] = app 
         unitfile_context['workers'] = config['workers']
