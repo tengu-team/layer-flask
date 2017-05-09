@@ -41,7 +41,7 @@ def start_nginx_sevice():
 @when_not('flask.nginx.installed')
 def start_nginx():
     hookenv.log("Configuring site for nginx")
-    configure_site('default', 'gunicornhost.conf', flask_port=config['flask-port'])
+    configure_site('flask', 'gunicornhost.conf', flask_port=config['flask-port'])
     set_state('flask.nginx.installed')
 
 @when('config.changed.nginx')
