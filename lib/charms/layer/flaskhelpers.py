@@ -19,12 +19,12 @@ def install_requirements(pathRequirements):
     call(["pip", "install", "--upgrade", "-r", pathRequirements])
 
 # Should be used by the layer including the flask layer
-def start_api(path, app, port, template='unitfile'):
+def start_api(path, app, port, template='unitfile', context=None):
     if os.path.exists("/home/ubuntu/flask/flask-config"):
         file = open("/home/ubuntu/flask/flask-config", "w")
         file.write(path + " " + app + " " + template)
         file.close()
-        start(path, app, port, template)
+        start(path, app, port, template, context)
 
 # Used by the flask layer to restart when flask-port changes occur
 def restart_api(port):
@@ -32,15 +32,15 @@ def restart_api(port):
     if path != "" and app != "" and template != "":
         start(path, app, port, template)
 
-def start(path, app, port, template):
+def start(path, app, port, template, context):
     if config["nginx"]:
-        start_api_gunicorn(path, app, port, config['workers'], template)
+        start_api_gunicorn(path, app, port, config['workers'], template, context)
     else:
         path = path.rstrip('/')
         Popen(["python3", path])
         set_state('flask.running')
 
-def start_api_gunicorn(path, app, port, workers, template):
+def start_api_gunicorn(path, app, port, workers, template, context):
     stop_api()
     path = path.rstrip('/')
     #info[0] = path to project
@@ -56,7 +56,8 @@ def start_api_gunicorn(path, app, port, workers, template):
                 'app': app,
                 'main': main,
            })
-    unitfile_context = load_unitfile()
+    unitfile_dict = load_unitfile()
+    unitfile_context = {**unitfile_dict, **context}
     unitfile_context['port'] = str(port)
     unitfile_context['pythonpath'] = info[0]
     unitfile_context['app'] = app 
