@@ -20,6 +20,8 @@ def install_requirements(pathRequirements):
 
 # Should be used by the layer including the flask layer
 def start_api(path, app, port, template='unitfile', context=None):
+    if not context:
+        context = {}
     if os.path.exists("/home/ubuntu/flask/flask-config"):
         file = open("/home/ubuntu/flask/flask-config", "w")
         file.write(path + " " + app + " " + template)
